@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package service;
+
+service Blober {
+    rpc Put(PutReq) returns (PutRes);
+    rpc Stream(stream StreamReq) returns (StreamRes);
+
+}
+
+message PutReq {
+    string name = 1;
+    bytes blob = 2;
+}
+message PutRes {}
+
+message StreamReq {
+    oneof phase {
+        string name = 1;
+        bytes blob = 2;
+    }
+}
+message StreamRes {}
