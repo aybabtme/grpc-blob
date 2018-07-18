@@ -1,0 +1,16 @@
+table PutReq {
+    name:string;
+    blob:[ubyte];
+}
+table PutRes {}
+
+table StreamReq {
+    name:string; // only set on first message
+    blob:[ubyte]; // set everytime after
+}
+table StreamRes {}
+
+rpc_service Blober {
+    Put(PutReq):PutRes;
+    Stream(StreamReq):StreamRes (streaming: "server");
+}
