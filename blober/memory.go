@@ -2,6 +2,7 @@ package blober
 
 import (
 	"context"
+	"io"
 	"os"
 	"sync"
 )
@@ -30,7 +31,7 @@ func (mem *memory) Write(ctx context.Context, name string, payload []byte) error
 
 var nothing []byte
 
-func (mem *memory) Create(ctx context.Context, name string) (WriteCloser, error) {
+func (mem *memory) Create(ctx context.Context, name string) (io.WriteCloser, error) {
 	_, ok := mem.blobs.LoadOrStore(name, nothing)
 	if ok {
 		return nil, os.ErrExist
@@ -38,14 +39,14 @@ func (mem *memory) Create(ctx context.Context, name string) (WriteCloser, error)
 	return &memoryWc{parent: mem, name: name}, nil
 }
 
-func (w *memoryWc) Write(ctx context.Context, payload []byte) (int, error) {
+func (w *memoryWc) Write(payload []byte) (int, error) {
 	cp := make([]byte, len(payload))
 	copy(cp, payload)
 	w.bytes = append(w.bytes, cp...)
 	return len(payload), nil
 }
 
-func (w *memoryWc) Close(ctx context.Context) error {
+func (w *memoryWc) Close() error {
 	w.parent.blobs.Store(w.name, w.bytes)
 	return nil
 }

@@ -2,6 +2,7 @@ package blober
 
 import (
 	"context"
+	"io"
 
 	service "github.com/aybabtme/grpc-blob/gen/gogofastgrpc"
 	"github.com/pkg/errors"
@@ -25,7 +26,7 @@ type gogoFastGRPCClientWc struct {
 	srv  service.Blober_StreamClient
 }
 
-func (c *gogoFastGRPCClient) Create(ctx context.Context, name string) (WriteCloser, error) {
+func (c *gogoFastGRPCClient) Create(ctx context.Context, name string) (io.WriteCloser, error) {
 	srv, err := c.client.Stream(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening stream")
@@ -39,7 +40,7 @@ func (c *gogoFastGRPCClient) Create(ctx context.Context, name string) (WriteClos
 	return &gogoFastGRPCClientWc{req: req, blob: new(service.StreamReq_Blob), srv: srv}, nil
 }
 
-func (w *gogoFastGRPCClientWc) Write(ctx context.Context, payload []byte) (int, error) {
+func (w *gogoFastGRPCClientWc) Write(payload []byte) (int, error) {
 	blob := w.blob
 	blob.Blob = payload
 	req := w.req
@@ -51,7 +52,7 @@ func (w *gogoFastGRPCClientWc) Write(ctx context.Context, payload []byte) (int, 
 	return len(payload), nil
 }
 
-func (w *gogoFastGRPCClientWc) Close(ctx context.Context) error {
+func (w *gogoFastGRPCClientWc) Close() error {
 	res, err := w.srv.CloseAndRecv()
 	if err != nil {
 		return errors.Wrap(err, "closing")

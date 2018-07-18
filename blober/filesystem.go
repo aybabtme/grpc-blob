@@ -2,6 +2,7 @@ package blober
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,11 +36,7 @@ func (fs *filesystem) Write(ctx context.Context, name string, payload []byte) er
 	return nil
 }
 
-type filesystemWc struct {
-	fd *os.File
-}
-
-func (fs *filesystem) Create(ctx context.Context, name string) (WriteCloser, error) {
+func (fs *filesystem) Create(ctx context.Context, name string) (io.WriteCloser, error) {
 	path := filepath.Join(fs.root, name)
 	if strings.Contains(name, "..") {
 		return nil, errors.New("name may not contain `..`")
@@ -48,13 +45,5 @@ func (fs *filesystem) Create(ctx context.Context, name string) (WriteCloser, err
 	if err != nil {
 		return nil, errors.Wrap(err, "creating file")
 	}
-	return &filesystemWc{fd: fd}, nil
-}
-
-func (w *filesystemWc) Write(ctx context.Context, payload []byte) (int, error) {
-	return w.fd.Write(payload)
-}
-
-func (w *filesystemWc) Close(ctx context.Context) error {
-	return w.fd.Close()
+	return fd, nil
 }

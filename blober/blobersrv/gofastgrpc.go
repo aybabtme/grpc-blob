@@ -21,10 +21,10 @@ func (b *GoFastGRPCBlober) Put(ctx context.Context, req *service.PutReq) (*servi
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "can't create file: %v", err)
 	}
-	if _, err := fd.Write(ctx, req.GetBlob()); err != nil {
+	if _, err := fd.Write(req.GetBlob()); err != nil {
 		return nil, status.Errorf(codes.Internal, "can't write to file: %v", err)
 	}
-	if err := fd.Close(ctx); err != nil {
+	if err := fd.Close(); err != nil {
 		return nil, status.Errorf(codes.Internal, "can't close file: %v", err)
 	}
 	return new(service.PutRes), nil
@@ -45,12 +45,12 @@ func (b *GoFastGRPCBlober) Stream(srv service.Blober_StreamServer) error {
 	for {
 		req, err := srv.Recv()
 		if err == io.EOF {
-			if err := fd.Close(ctx); err != nil {
+			if err := fd.Close(); err != nil {
 				return status.Errorf(codes.Internal, "can't close file: %v", err)
 			}
 			return nil
 		}
-		if _, err := fd.Write(ctx, req.GetBlob()); err != nil {
+		if _, err := fd.Write(req.GetBlob()); err != nil {
 			return status.Errorf(codes.Internal, "can't write to file: %v", err)
 		}
 	}

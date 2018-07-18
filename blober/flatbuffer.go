@@ -2,6 +2,7 @@ package blober
 
 import (
 	"context"
+	"io"
 
 	service "github.com/aybabtme/grpc-blob/gen/flatbuffer/service"
 	flatbuffers "github.com/google/flatbuffers/go"
@@ -37,7 +38,7 @@ type flatbufferWc struct {
 	srv service.Blober_StreamClient
 }
 
-func (c *flatbufferClient) Create(ctx context.Context, name string) (WriteCloser, error) {
+func (c *flatbufferClient) Create(ctx context.Context, name string) (io.WriteCloser, error) {
 	srv, err := c.client.Stream(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening stream")
@@ -54,7 +55,7 @@ func (c *flatbufferClient) Create(ctx context.Context, name string) (WriteCloser
 	return &flatbufferWc{b: b, srv: srv}, nil
 }
 
-func (w *flatbufferWc) Write(ctx context.Context, payload []byte) (int, error) {
+func (w *flatbufferWc) Write(payload []byte) (int, error) {
 	b := w.b
 	b.Reset()
 	payloadT := b.CreateByteVector(payload)
@@ -68,7 +69,7 @@ func (w *flatbufferWc) Write(ctx context.Context, payload []byte) (int, error) {
 	return len(payload), nil
 }
 
-func (w *flatbufferWc) Close(ctx context.Context) error {
+func (w *flatbufferWc) Close() error {
 	res, err := w.srv.CloseAndRecv()
 	if err != nil {
 		return errors.Wrap(err, "closing")
