@@ -2,7 +2,7 @@
 //If you make any local changes, they will be lost
 //source: service
 
-package 
+package service
 
 import "github.com/google/flatbuffers/go"
 
@@ -15,7 +15,7 @@ import (
 type BloberClient interface{
   Put(ctx context.Context, in *flatbuffers.Builder, 
   	opts... grpc.CallOption) (* PutRes, error)  
-  Stream(ctx context.Context, in *flatbuffers.Builder, 
+  Stream(ctx context.Context, 
   	opts... grpc.CallOption) (Blober_StreamClient, error)  
 }
 
@@ -30,23 +30,22 @@ func NewBloberClient(cc *grpc.ClientConn) BloberClient {
 func (c *bloberClient) Put(ctx context.Context, in *flatbuffers.Builder, 
 	opts... grpc.CallOption) (* PutRes, error) {
   out := new(PutRes)
-  err := grpc.Invoke(ctx, "/.Blober/Put", in, out, c.cc, opts...)
+  err := grpc.Invoke(ctx, "/service.Blober/Put", in, out, c.cc, opts...)
   if err != nil { return nil, err }
   return out, nil
 }
 
-func (c *bloberClient) Stream(ctx context.Context, in *flatbuffers.Builder, 
+func (c *bloberClient) Stream(ctx context.Context, 
 	opts... grpc.CallOption) (Blober_StreamClient, error) {
-  stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[0], c.cc, "/.Blober/Stream", opts...)
+  stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[0], c.cc, "/service.Blober/Stream", opts...)
   if err != nil { return nil, err }
   x := &bloberStreamClient{stream}
-  if err := x.ClientStream.SendMsg(in); err != nil { return nil, err }
-  if err := x.ClientStream.CloseSend(); err != nil { return nil, err }
   return x,nil
 }
 
 type Blober_StreamClient interface {
-  Recv() (*StreamRes, error)
+  Send(*flatbuffers.Builder) error
+  CloseAndRecv() (*StreamRes, error)
   grpc.ClientStream
 }
 
@@ -54,8 +53,13 @@ type bloberStreamClient struct{
   grpc.ClientStream
 }
 
-func (x *bloberStreamClient) Recv() (*StreamRes, error) {
-  m := new(StreamRes)
+func (x *bloberStreamClient) Send(m *flatbuffers.Builder) error {
+  return x.ClientStream.SendMsg(m)
+}
+
+func (x *bloberStreamClient) CloseAndRecv() (*StreamRes, error) {
+  if err := x.ClientStream.CloseSend(); err != nil { return nil, err }
+  m := new (StreamRes)
   if err := x.ClientStream.RecvMsg(m); err != nil { return nil, err }
   return m, nil
 }
@@ -63,7 +67,7 @@ func (x *bloberStreamClient) Recv() (*StreamRes, error) {
 // Server API for Blober service
 type BloberServer interface {
   Put(context.Context, *PutReq) (*flatbuffers.Builder, error)  
-  Stream(*StreamReq, Blober_StreamServer) error  
+  Stream(Blober_StreamServer) error  
 }
 
 func RegisterBloberServer(s *grpc.Server, srv BloberServer) {
@@ -77,7 +81,7 @@ func _Blober_Put_Handler(srv interface{}, ctx context.Context,
   if interceptor == nil { return srv.(BloberServer).Put(ctx, in) }
   info := &grpc.UnaryServerInfo{
     Server: srv,
-    FullMethod: "/.Blober/Put",
+    FullMethod: "/service.Blober/Put",
   }
   
   handler := func(ctx context.Context, req interface{}) (interface{}, error) {
@@ -88,13 +92,12 @@ func _Blober_Put_Handler(srv interface{}, ctx context.Context,
 
 
 func _Blober_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
-  m := new(StreamReq)
-  if err := stream.RecvMsg(m); err != nil { return err }
-  return srv.(BloberServer).Stream(m, &bloberStreamServer{stream})
+  return srv.(BloberServer).Stream(&bloberStreamServer{stream})
 }
 
 type Blober_StreamServer interface { 
-  Send(* flatbuffers.Builder) error
+  Recv() (* StreamReq, error)
+  SendAndClose(* flatbuffers.Builder) error
   grpc.ServerStream
 }
 
@@ -102,13 +105,19 @@ type bloberStreamServer struct {
   grpc.ServerStream
 }
 
-func (x *bloberStreamServer) Send(m *flatbuffers.Builder) error {
+func (x *bloberStreamServer) Recv() (*StreamReq, error) {
+  m := new(StreamReq)
+  if err := x.ServerStream.RecvMsg(m); err != nil { return nil, err }
+  return m, nil
+}
+
+func (x *bloberStreamServer) SendAndClose(m *flatbuffers.Builder) error {
   return x.ServerStream.SendMsg(m)
 }
 
 
 var _Blober_serviceDesc = grpc.ServiceDesc{
-  ServiceName: ".Blober",
+  ServiceName: "service.Blober",
   HandlerType: (*BloberServer)(nil),
   Methods: []grpc.MethodDesc{
     {
@@ -120,7 +129,7 @@ var _Blober_serviceDesc = grpc.ServiceDesc{
     {
       StreamName: "Stream",
       Handler: _Blober_Stream_Handler, 
-      ServerStreams: true,
+      ClientStreams: true,
     },
   },
 }

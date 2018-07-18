@@ -1,3 +1,5 @@
+namespace service;
+
 table PutReq {
     name:string;
     blob:[ubyte];
@@ -12,5 +14,5 @@ table StreamRes {}
 
 rpc_service Blober {
     Put(PutReq):PutRes;
-    Stream(StreamReq):StreamRes (streaming: "server");
+    Stream(StreamReq):StreamRes (streaming: "client");
 }
