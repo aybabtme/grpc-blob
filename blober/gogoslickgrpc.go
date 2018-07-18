@@ -2,55 +2,60 @@ package blober
 
 import (
 	"context"
-	"io"
-	"os"
 
 	service "github.com/aybabtme/grpc-blob/gen/gogoslickgrpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/pkg/errors"
 )
 
-var _ service.BloberServer = (*GogoSlickGRPCBlober)(nil)
-
-type GogoSlickGRPCBlober struct {
-	FS Blober
+func GogoSlickGRPC(client service.BloberClient) Blober {
+	return &gogoSlickGRPCClient{client: client}
 }
 
-func (b *GogoSlickGRPCBlober) Put(ctx context.Context, req *service.PutReq) (*service.PutRes, error) {
-	fd, err := b.FS.Create(req.GetName())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "can't create file: %v", err)
-	}
-	if _, err := fd.Write(req.GetBlob()); err != nil {
-		return nil, status.Errorf(codes.Internal, "can't write to file: %v", err)
-	}
-	if err := fd.Close(); err != nil {
-		return nil, status.Errorf(codes.Internal, "can't close file: %v", err)
-	}
-	return new(service.PutRes), nil
+type gogoSlickGRPCClient struct {
+	client service.BloberClient
 }
 
-func (b *GogoSlickGRPCBlober) Stream(srv service.Blober_StreamServer) error {
-	req, err := srv.Recv()
-	if err == io.EOF {
-		return nil
-	}
-	defer srv.SendAndClose(&service.StreamRes{})
+func (b *gogoSlickGRPCClient) Write(ctx context.Context, name string, payload []byte) error {
+	return nil
+}
 
-	fd, err := b.FS.Create(req.GetName())
+type gogoSlickGRPCClientWc struct {
+	req  *service.StreamReq
+	blob *service.StreamReq_Blob
+	srv  service.Blober_StreamClient
+}
+
+func (c *gogoSlickGRPCClient) Create(ctx context.Context, name string) (WriteCloser, error) {
+	srv, err := c.client.Stream(ctx)
 	if err != nil {
-		return status.Errorf(codes.Internal, "can't create file: %v", err)
+		return nil, errors.Wrap(err, "opening stream")
 	}
-	for {
-		req, err := srv.Recv()
-		if err == io.EOF {
-			if err := fd.Close(); err != nil {
-				return status.Errorf(codes.Internal, "can't close file: %v", err)
-			}
-			return nil
-		}
-		if _, err := os.Stdout.Write(req.GetBlob()); err != nil {
-			return status.Errorf(codes.Internal, "can't write to file: %v", err)
-		}
+	req := new(service.StreamReq)
+	req.Phase = &service.StreamReq_Name{Name: name}
+
+	if err := srv.Send(req); err != nil {
+		return nil, errors.Wrap(err, "sending file name")
 	}
+	return &gogoSlickGRPCClientWc{req: req, blob: new(service.StreamReq_Blob), srv: srv}, nil
+}
+
+func (w *gogoSlickGRPCClientWc) Write(ctx context.Context, payload []byte) (int, error) {
+	blob := w.blob
+	blob.Blob = payload
+	req := w.req
+	req.Reset()
+	req.Phase = blob
+	if err := w.srv.Send(req); err != nil {
+		return 0, errors.Wrap(err, "sending bytes")
+	}
+	return len(payload), nil
+}
+
+func (w *gogoSlickGRPCClientWc) Close(ctx context.Context) error {
+	res, err := w.srv.CloseAndRecv()
+	if err != nil {
+		return errors.Wrap(err, "closing")
+	}
+	_ = res // not used for now
+	return nil
 }
