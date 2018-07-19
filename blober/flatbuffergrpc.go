@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	service "github.com/aybabtme/grpc-blob/gen/flatbuffer/service"
+	service "github.com/aybabtme/grpc-blob/gen/flatbuffergrpc/service"
 	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/pkg/errors"
 )
@@ -21,10 +21,10 @@ func (c *flatbufferClient) Write(ctx context.Context, name string, payload []byt
 	b := flatbuffers.NewBuilder(0)
 	nameT := b.CreateString(name)
 	payloadT := b.CreateByteVector(payload)
-	service.StreamReqStart(b)
-	service.StreamReqAddName(b, nameT)
-	service.StreamReqAddBlob(b, payloadT)
-	b.Finish(service.StreamReqEnd(b))
+	service.PutReqStart(b)
+	service.PutReqAddName(b, nameT)
+	service.PutReqAddBlob(b, payloadT)
+	b.Finish(service.PutReqEnd(b))
 	res, err := c.client.Put(ctx, b)
 	if err != nil {
 		return errors.Wrap(err, "writing")

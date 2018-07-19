@@ -8,7 +8,7 @@ all: $(gen_dir)/golanggrpc/service.pb.go \
 	 $(gen_dir)/gogofastgrpc/service.pb.go \
 	 $(gen_dir)/gogofastergrpc/service.pb.go \
 	 $(gen_dir)/gogoslickgrpc/service.pb.go \
-	 $(gen_dir)/flatbuffer/Blober_grpc.go
+	 $(gen_dir)/flatbuffergrpc/Blober_grpc.go
 
 clean:
 	rm -rf gen
@@ -43,8 +43,8 @@ $(gen_dir)/gogoslickgrpc:
 $(gen_dir)/gogoslickgrpc/service.pb.go: $(gen_dir)/gogoslickgrpc $(proto_idl)
 	docker run --rm -v $(root_dir):$(root_dir) -w $(root_dir)/idl znly/protoc --gofast_out=plugins=grpc:../$(gen_dir)/gogoslickgrpc/. -I. service.proto
 
-$(gen_dir)/flatbuffer:
-	mkdir -p $(gen_dir)/flatbuffer
+$(gen_dir)/flatbuffergrpc:
+	mkdir -p $(gen_dir)/flatbuffergrpc
 
-$(gen_dir)/flatbuffer/Blober_grpc.go: $(gen_dir)/flatbuffer $(flat_idl)
-	docker run -v $(root_dir):$(root_dir) -w $(root_dir) neomantra/flatbuffers flatc --grpc --go -o $(gen_dir)/flatbuffer/ idl/service.fbs
+$(gen_dir)/flatbuffergrpc/Blober_grpc.go: $(gen_dir)/flatbuffergrpc $(flat_idl)
+	docker run -v $(root_dir):$(root_dir) -w $(root_dir) neomantra/flatbuffers flatc --grpc --go -o $(gen_dir)/flatbuffergrpc/ idl/service.fbs
