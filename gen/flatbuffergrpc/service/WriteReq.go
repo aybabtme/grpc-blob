@@ -6,27 +6,27 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
-type StreamReq struct {
+type WriteReq struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsStreamReq(buf []byte, offset flatbuffers.UOffsetT) *StreamReq {
+func GetRootAsWriteReq(buf []byte, offset flatbuffers.UOffsetT) *WriteReq {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamReq{}
+	x := &WriteReq{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *StreamReq) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *WriteReq) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *StreamReq) Table() flatbuffers.Table {
+func (rcv *WriteReq) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *StreamReq) Name() []byte {
+func (rcv *WriteReq) Name() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -34,7 +34,7 @@ func (rcv *StreamReq) Name() []byte {
 	return nil
 }
 
-func (rcv *StreamReq) Blob(j int) byte {
+func (rcv *WriteReq) Blob(j int) byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		a := rcv._tab.Vector(o)
@@ -43,7 +43,7 @@ func (rcv *StreamReq) Blob(j int) byte {
 	return 0
 }
 
-func (rcv *StreamReq) BlobLength() int {
+func (rcv *WriteReq) BlobLength() int {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.VectorLen(o)
@@ -51,7 +51,7 @@ func (rcv *StreamReq) BlobLength() int {
 	return 0
 }
 
-func (rcv *StreamReq) BlobBytes() []byte {
+func (rcv *WriteReq) BlobBytes() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -59,18 +59,18 @@ func (rcv *StreamReq) BlobBytes() []byte {
 	return nil
 }
 
-func StreamReqStart(builder *flatbuffers.Builder) {
+func WriteReqStart(builder *flatbuffers.Builder) {
 	builder.StartObject(2)
 }
-func StreamReqAddName(builder *flatbuffers.Builder, name flatbuffers.UOffsetT) {
+func WriteReqAddName(builder *flatbuffers.Builder, name flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(name), 0)
 }
-func StreamReqAddBlob(builder *flatbuffers.Builder, blob flatbuffers.UOffsetT) {
+func WriteReqAddBlob(builder *flatbuffers.Builder, blob flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(blob), 0)
 }
-func StreamReqStartBlobVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
+func WriteReqStartBlobVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
 	return builder.StartVector(1, numElems, 1)
 }
-func StreamReqEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func WriteReqEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }

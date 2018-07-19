@@ -15,8 +15,12 @@ import (
 type BloberClient interface{
   Put(ctx context.Context, in *flatbuffers.Builder, 
   	opts... grpc.CallOption) (* PutRes, error)  
-  Stream(ctx context.Context, 
-  	opts... grpc.CallOption) (Blober_StreamClient, error)  
+  Get(ctx context.Context, in *flatbuffers.Builder, 
+  	opts... grpc.CallOption) (* GetRes, error)  
+  Write(ctx context.Context, 
+  	opts... grpc.CallOption) (Blober_WriteClient, error)  
+  Read(ctx context.Context, in *flatbuffers.Builder, 
+  	opts... grpc.CallOption) (Blober_ReadClient, error)  
 }
 
 type bloberClient struct {
@@ -35,31 +39,64 @@ func (c *bloberClient) Put(ctx context.Context, in *flatbuffers.Builder,
   return out, nil
 }
 
-func (c *bloberClient) Stream(ctx context.Context, 
-	opts... grpc.CallOption) (Blober_StreamClient, error) {
-  stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[0], c.cc, "/service.Blober/Stream", opts...)
+func (c *bloberClient) Get(ctx context.Context, in *flatbuffers.Builder, 
+	opts... grpc.CallOption) (* GetRes, error) {
+  out := new(GetRes)
+  err := grpc.Invoke(ctx, "/service.Blober/Get", in, out, c.cc, opts...)
   if err != nil { return nil, err }
-  x := &bloberStreamClient{stream}
+  return out, nil
+}
+
+func (c *bloberClient) Write(ctx context.Context, 
+	opts... grpc.CallOption) (Blober_WriteClient, error) {
+  stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[0], c.cc, "/service.Blober/Write", opts...)
+  if err != nil { return nil, err }
+  x := &bloberWriteClient{stream}
   return x,nil
 }
 
-type Blober_StreamClient interface {
+type Blober_WriteClient interface {
   Send(*flatbuffers.Builder) error
-  CloseAndRecv() (*StreamRes, error)
+  CloseAndRecv() (*WriteRes, error)
   grpc.ClientStream
 }
 
-type bloberStreamClient struct{
+type bloberWriteClient struct{
   grpc.ClientStream
 }
 
-func (x *bloberStreamClient) Send(m *flatbuffers.Builder) error {
+func (x *bloberWriteClient) Send(m *flatbuffers.Builder) error {
   return x.ClientStream.SendMsg(m)
 }
 
-func (x *bloberStreamClient) CloseAndRecv() (*StreamRes, error) {
+func (x *bloberWriteClient) CloseAndRecv() (*WriteRes, error) {
   if err := x.ClientStream.CloseSend(); err != nil { return nil, err }
-  m := new (StreamRes)
+  m := new (WriteRes)
+  if err := x.ClientStream.RecvMsg(m); err != nil { return nil, err }
+  return m, nil
+}
+
+func (c *bloberClient) Read(ctx context.Context, in *flatbuffers.Builder, 
+	opts... grpc.CallOption) (Blober_ReadClient, error) {
+  stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[1], c.cc, "/service.Blober/Read", opts...)
+  if err != nil { return nil, err }
+  x := &bloberReadClient{stream}
+  if err := x.ClientStream.SendMsg(in); err != nil { return nil, err }
+  if err := x.ClientStream.CloseSend(); err != nil { return nil, err }
+  return x,nil
+}
+
+type Blober_ReadClient interface {
+  Recv() (*ReadRes, error)
+  grpc.ClientStream
+}
+
+type bloberReadClient struct{
+  grpc.ClientStream
+}
+
+func (x *bloberReadClient) Recv() (*ReadRes, error) {
+  m := new(ReadRes)
   if err := x.ClientStream.RecvMsg(m); err != nil { return nil, err }
   return m, nil
 }
@@ -67,7 +104,9 @@ func (x *bloberStreamClient) CloseAndRecv() (*StreamRes, error) {
 // Server API for Blober service
 type BloberServer interface {
   Put(context.Context, *PutReq) (*flatbuffers.Builder, error)  
-  Stream(Blober_StreamServer) error  
+  Get(context.Context, *GetReq) (*flatbuffers.Builder, error)  
+  Write(Blober_WriteServer) error  
+  Read(*ReadReq, Blober_ReadServer) error  
 }
 
 func RegisterBloberServer(s *grpc.Server, srv BloberServer) {
@@ -91,27 +130,64 @@ func _Blober_Put_Handler(srv interface{}, ctx context.Context,
 }
 
 
-func _Blober_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
-  return srv.(BloberServer).Stream(&bloberStreamServer{stream})
+func _Blober_Get_Handler(srv interface{}, ctx context.Context,
+	dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+  in := new(GetReq)
+  if err := dec(in); err != nil { return nil, err }
+  if interceptor == nil { return srv.(BloberServer).Get(ctx, in) }
+  info := &grpc.UnaryServerInfo{
+    Server: srv,
+    FullMethod: "/service.Blober/Get",
+  }
+  
+  handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+    return srv.(BloberServer).Get(ctx, req.(* GetReq))
+  }
+  return interceptor(ctx, in, info, handler)
 }
 
-type Blober_StreamServer interface { 
-  Recv() (* StreamReq, error)
+
+func _Blober_Write_Handler(srv interface{}, stream grpc.ServerStream) error {
+  return srv.(BloberServer).Write(&bloberWriteServer{stream})
+}
+
+type Blober_WriteServer interface { 
+  Recv() (* WriteReq, error)
   SendAndClose(* flatbuffers.Builder) error
   grpc.ServerStream
 }
 
-type bloberStreamServer struct {
+type bloberWriteServer struct {
   grpc.ServerStream
 }
 
-func (x *bloberStreamServer) Recv() (*StreamReq, error) {
-  m := new(StreamReq)
+func (x *bloberWriteServer) Recv() (*WriteReq, error) {
+  m := new(WriteReq)
   if err := x.ServerStream.RecvMsg(m); err != nil { return nil, err }
   return m, nil
 }
 
-func (x *bloberStreamServer) SendAndClose(m *flatbuffers.Builder) error {
+func (x *bloberWriteServer) SendAndClose(m *flatbuffers.Builder) error {
+  return x.ServerStream.SendMsg(m)
+}
+
+
+func _Blober_Read_Handler(srv interface{}, stream grpc.ServerStream) error {
+  m := new(ReadReq)
+  if err := stream.RecvMsg(m); err != nil { return err }
+  return srv.(BloberServer).Read(m, &bloberReadServer{stream})
+}
+
+type Blober_ReadServer interface { 
+  Send(* flatbuffers.Builder) error
+  grpc.ServerStream
+}
+
+type bloberReadServer struct {
+  grpc.ServerStream
+}
+
+func (x *bloberReadServer) Send(m *flatbuffers.Builder) error {
   return x.ServerStream.SendMsg(m)
 }
 
@@ -124,12 +200,21 @@ var _Blober_serviceDesc = grpc.ServiceDesc{
       MethodName: "Put",
       Handler: _Blober_Put_Handler, 
     },
+    {
+      MethodName: "Get",
+      Handler: _Blober_Get_Handler, 
+    },
   },
   Streams: []grpc.StreamDesc{
     {
-      StreamName: "Stream",
-      Handler: _Blober_Stream_Handler, 
+      StreamName: "Write",
+      Handler: _Blober_Write_Handler, 
       ClientStreams: true,
+    },
+    {
+      StreamName: "Read",
+      Handler: _Blober_Read_Handler, 
+      ServerStreams: true,
     },
   },
 }

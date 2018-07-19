@@ -6,29 +6,29 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
-type StreamRes struct {
+type WriteRes struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsStreamRes(buf []byte, offset flatbuffers.UOffsetT) *StreamRes {
+func GetRootAsWriteRes(buf []byte, offset flatbuffers.UOffsetT) *WriteRes {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamRes{}
+	x := &WriteRes{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *StreamRes) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *WriteRes) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *StreamRes) Table() flatbuffers.Table {
+func (rcv *WriteRes) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func StreamResStart(builder *flatbuffers.Builder) {
+func WriteResStart(builder *flatbuffers.Builder) {
 	builder.StartObject(0)
 }
-func StreamResEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func WriteResEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }

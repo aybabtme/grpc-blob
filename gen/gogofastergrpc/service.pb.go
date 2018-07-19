@@ -10,8 +10,12 @@ It is generated from these files:
 It has these top-level messages:
 	PutReq
 	PutRes
-	StreamReq
-	StreamRes
+	GetReq
+	GetRes
+	WriteReq
+	WriteRes
+	ReadReq
+	ReadRes
 */
 package service
 
@@ -69,111 +73,143 @@ func (m *PutRes) String() string            { return proto.CompactTextString(m) 
 func (*PutRes) ProtoMessage()               {}
 func (*PutRes) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{1} }
 
-type StreamReq struct {
-	// Types that are valid to be assigned to Phase:
-	//	*StreamReq_Name
-	//	*StreamReq_Blob
-	Phase isStreamReq_Phase `protobuf_oneof:"phase"`
+type GetReq struct {
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *StreamReq) Reset()                    { *m = StreamReq{} }
-func (m *StreamReq) String() string            { return proto.CompactTextString(m) }
-func (*StreamReq) ProtoMessage()               {}
-func (*StreamReq) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{2} }
+func (m *GetReq) Reset()                    { *m = GetReq{} }
+func (m *GetReq) String() string            { return proto.CompactTextString(m) }
+func (*GetReq) ProtoMessage()               {}
+func (*GetReq) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{2} }
 
-type isStreamReq_Phase interface {
-	isStreamReq_Phase()
+func (m *GetReq) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+type GetRes struct {
+	Blob []byte `protobuf:"bytes,1,opt,name=blob,proto3" json:"blob,omitempty"`
+}
+
+func (m *GetRes) Reset()                    { *m = GetRes{} }
+func (m *GetRes) String() string            { return proto.CompactTextString(m) }
+func (*GetRes) ProtoMessage()               {}
+func (*GetRes) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{3} }
+
+func (m *GetRes) GetBlob() []byte {
+	if m != nil {
+		return m.Blob
+	}
+	return nil
+}
+
+type WriteReq struct {
+	// Types that are valid to be assigned to Phase:
+	//	*WriteReq_Name
+	//	*WriteReq_Blob
+	Phase isWriteReq_Phase `protobuf_oneof:"phase"`
+}
+
+func (m *WriteReq) Reset()                    { *m = WriteReq{} }
+func (m *WriteReq) String() string            { return proto.CompactTextString(m) }
+func (*WriteReq) ProtoMessage()               {}
+func (*WriteReq) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{4} }
+
+type isWriteReq_Phase interface {
+	isWriteReq_Phase()
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
 
-type StreamReq_Name struct {
+type WriteReq_Name struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3,oneof"`
 }
-type StreamReq_Blob struct {
+type WriteReq_Blob struct {
 	Blob []byte `protobuf:"bytes,2,opt,name=blob,proto3,oneof"`
 }
 
-func (*StreamReq_Name) isStreamReq_Phase() {}
-func (*StreamReq_Blob) isStreamReq_Phase() {}
+func (*WriteReq_Name) isWriteReq_Phase() {}
+func (*WriteReq_Blob) isWriteReq_Phase() {}
 
-func (m *StreamReq) GetPhase() isStreamReq_Phase {
+func (m *WriteReq) GetPhase() isWriteReq_Phase {
 	if m != nil {
 		return m.Phase
 	}
 	return nil
 }
 
-func (m *StreamReq) GetName() string {
-	if x, ok := m.GetPhase().(*StreamReq_Name); ok {
+func (m *WriteReq) GetName() string {
+	if x, ok := m.GetPhase().(*WriteReq_Name); ok {
 		return x.Name
 	}
 	return ""
 }
 
-func (m *StreamReq) GetBlob() []byte {
-	if x, ok := m.GetPhase().(*StreamReq_Blob); ok {
+func (m *WriteReq) GetBlob() []byte {
+	if x, ok := m.GetPhase().(*WriteReq_Blob); ok {
 		return x.Blob
 	}
 	return nil
 }
 
 // XXX_OneofFuncs is for the internal use of the proto package.
-func (*StreamReq) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _StreamReq_OneofMarshaler, _StreamReq_OneofUnmarshaler, _StreamReq_OneofSizer, []interface{}{
-		(*StreamReq_Name)(nil),
-		(*StreamReq_Blob)(nil),
+func (*WriteReq) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _WriteReq_OneofMarshaler, _WriteReq_OneofUnmarshaler, _WriteReq_OneofSizer, []interface{}{
+		(*WriteReq_Name)(nil),
+		(*WriteReq_Blob)(nil),
 	}
 }
 
-func _StreamReq_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*StreamReq)
+func _WriteReq_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*WriteReq)
 	// phase
 	switch x := m.Phase.(type) {
-	case *StreamReq_Name:
+	case *WriteReq_Name:
 		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
 		_ = b.EncodeStringBytes(x.Name)
-	case *StreamReq_Blob:
+	case *WriteReq_Blob:
 		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
 		_ = b.EncodeRawBytes(x.Blob)
 	case nil:
 	default:
-		return fmt.Errorf("StreamReq.Phase has unexpected type %T", x)
+		return fmt.Errorf("WriteReq.Phase has unexpected type %T", x)
 	}
 	return nil
 }
 
-func _StreamReq_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*StreamReq)
+func _WriteReq_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*WriteReq)
 	switch tag {
 	case 1: // phase.name
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
 		x, err := b.DecodeStringBytes()
-		m.Phase = &StreamReq_Name{x}
+		m.Phase = &WriteReq_Name{x}
 		return true, err
 	case 2: // phase.blob
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
 		x, err := b.DecodeRawBytes(true)
-		m.Phase = &StreamReq_Blob{x}
+		m.Phase = &WriteReq_Blob{x}
 		return true, err
 	default:
 		return false, nil
 	}
 }
 
-func _StreamReq_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*StreamReq)
+func _WriteReq_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*WriteReq)
 	// phase
 	switch x := m.Phase.(type) {
-	case *StreamReq_Name:
+	case *WriteReq_Name:
 		n += proto.SizeVarint(1<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(len(x.Name)))
 		n += len(x.Name)
-	case *StreamReq_Blob:
+	case *WriteReq_Blob:
 		n += proto.SizeVarint(2<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(len(x.Blob)))
 		n += len(x.Blob)
@@ -184,19 +220,55 @@ func _StreamReq_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-type StreamRes struct {
+type WriteRes struct {
 }
 
-func (m *StreamRes) Reset()                    { *m = StreamRes{} }
-func (m *StreamRes) String() string            { return proto.CompactTextString(m) }
-func (*StreamRes) ProtoMessage()               {}
-func (*StreamRes) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{3} }
+func (m *WriteRes) Reset()                    { *m = WriteRes{} }
+func (m *WriteRes) String() string            { return proto.CompactTextString(m) }
+func (*WriteRes) ProtoMessage()               {}
+func (*WriteRes) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{5} }
+
+type ReadReq struct {
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *ReadReq) Reset()                    { *m = ReadReq{} }
+func (m *ReadReq) String() string            { return proto.CompactTextString(m) }
+func (*ReadReq) ProtoMessage()               {}
+func (*ReadReq) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{6} }
+
+func (m *ReadReq) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+type ReadRes struct {
+	Blob []byte `protobuf:"bytes,1,opt,name=blob,proto3" json:"blob,omitempty"`
+}
+
+func (m *ReadRes) Reset()                    { *m = ReadRes{} }
+func (m *ReadRes) String() string            { return proto.CompactTextString(m) }
+func (*ReadRes) ProtoMessage()               {}
+func (*ReadRes) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{7} }
+
+func (m *ReadRes) GetBlob() []byte {
+	if m != nil {
+		return m.Blob
+	}
+	return nil
+}
 
 func init() {
 	proto.RegisterType((*PutReq)(nil), "service.PutReq")
 	proto.RegisterType((*PutRes)(nil), "service.PutRes")
-	proto.RegisterType((*StreamReq)(nil), "service.StreamReq")
-	proto.RegisterType((*StreamRes)(nil), "service.StreamRes")
+	proto.RegisterType((*GetReq)(nil), "service.GetReq")
+	proto.RegisterType((*GetRes)(nil), "service.GetRes")
+	proto.RegisterType((*WriteReq)(nil), "service.WriteReq")
+	proto.RegisterType((*WriteRes)(nil), "service.WriteRes")
+	proto.RegisterType((*ReadReq)(nil), "service.ReadReq")
+	proto.RegisterType((*ReadRes)(nil), "service.ReadRes")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -211,7 +283,9 @@ const _ = grpc.SupportPackageIsVersion4
 
 type BloberClient interface {
 	Put(ctx context.Context, in *PutReq, opts ...grpc.CallOption) (*PutRes, error)
-	Stream(ctx context.Context, opts ...grpc.CallOption) (Blober_StreamClient, error)
+	Get(ctx context.Context, in *GetReq, opts ...grpc.CallOption) (*GetRes, error)
+	Write(ctx context.Context, opts ...grpc.CallOption) (Blober_WriteClient, error)
+	Read(ctx context.Context, in *ReadReq, opts ...grpc.CallOption) (Blober_ReadClient, error)
 }
 
 type bloberClient struct {
@@ -231,34 +305,75 @@ func (c *bloberClient) Put(ctx context.Context, in *PutReq, opts ...grpc.CallOpt
 	return out, nil
 }
 
-func (c *bloberClient) Stream(ctx context.Context, opts ...grpc.CallOption) (Blober_StreamClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[0], c.cc, "/service.Blober/Stream", opts...)
+func (c *bloberClient) Get(ctx context.Context, in *GetReq, opts ...grpc.CallOption) (*GetRes, error) {
+	out := new(GetRes)
+	err := grpc.Invoke(ctx, "/service.Blober/Get", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &bloberStreamClient{stream}
+	return out, nil
+}
+
+func (c *bloberClient) Write(ctx context.Context, opts ...grpc.CallOption) (Blober_WriteClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[0], c.cc, "/service.Blober/Write", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &bloberWriteClient{stream}
 	return x, nil
 }
 
-type Blober_StreamClient interface {
-	Send(*StreamReq) error
-	CloseAndRecv() (*StreamRes, error)
+type Blober_WriteClient interface {
+	Send(*WriteReq) error
+	CloseAndRecv() (*WriteRes, error)
 	grpc.ClientStream
 }
 
-type bloberStreamClient struct {
+type bloberWriteClient struct {
 	grpc.ClientStream
 }
 
-func (x *bloberStreamClient) Send(m *StreamReq) error {
+func (x *bloberWriteClient) Send(m *WriteReq) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *bloberStreamClient) CloseAndRecv() (*StreamRes, error) {
+func (x *bloberWriteClient) CloseAndRecv() (*WriteRes, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
-	m := new(StreamRes)
+	m := new(WriteRes)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *bloberClient) Read(ctx context.Context, in *ReadReq, opts ...grpc.CallOption) (Blober_ReadClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Blober_serviceDesc.Streams[1], c.cc, "/service.Blober/Read", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &bloberReadClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Blober_ReadClient interface {
+	Recv() (*ReadRes, error)
+	grpc.ClientStream
+}
+
+type bloberReadClient struct {
+	grpc.ClientStream
+}
+
+func (x *bloberReadClient) Recv() (*ReadRes, error) {
+	m := new(ReadRes)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -269,7 +384,9 @@ func (x *bloberStreamClient) CloseAndRecv() (*StreamRes, error) {
 
 type BloberServer interface {
 	Put(context.Context, *PutReq) (*PutRes, error)
-	Stream(Blober_StreamServer) error
+	Get(context.Context, *GetReq) (*GetRes, error)
+	Write(Blober_WriteServer) error
+	Read(*ReadReq, Blober_ReadServer) error
 }
 
 func RegisterBloberServer(s *grpc.Server, srv BloberServer) {
@@ -294,30 +411,69 @@ func _Blober_Put_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Blober_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(BloberServer).Stream(&bloberStreamServer{stream})
+func _Blober_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BloberServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/service.Blober/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BloberServer).Get(ctx, req.(*GetReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-type Blober_StreamServer interface {
-	SendAndClose(*StreamRes) error
-	Recv() (*StreamReq, error)
+func _Blober_Write_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(BloberServer).Write(&bloberWriteServer{stream})
+}
+
+type Blober_WriteServer interface {
+	SendAndClose(*WriteRes) error
+	Recv() (*WriteReq, error)
 	grpc.ServerStream
 }
 
-type bloberStreamServer struct {
+type bloberWriteServer struct {
 	grpc.ServerStream
 }
 
-func (x *bloberStreamServer) SendAndClose(m *StreamRes) error {
+func (x *bloberWriteServer) SendAndClose(m *WriteRes) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *bloberStreamServer) Recv() (*StreamReq, error) {
-	m := new(StreamReq)
+func (x *bloberWriteServer) Recv() (*WriteReq, error) {
+	m := new(WriteReq)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
+}
+
+func _Blober_Read_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ReadReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(BloberServer).Read(m, &bloberReadServer{stream})
+}
+
+type Blober_ReadServer interface {
+	Send(*ReadRes) error
+	grpc.ServerStream
+}
+
+type bloberReadServer struct {
+	grpc.ServerStream
+}
+
+func (x *bloberReadServer) Send(m *ReadRes) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _Blober_serviceDesc = grpc.ServiceDesc{
@@ -328,12 +484,21 @@ var _Blober_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Put",
 			Handler:    _Blober_Put_Handler,
 		},
+		{
+			MethodName: "Get",
+			Handler:    _Blober_Get_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Stream",
-			Handler:       _Blober_Stream_Handler,
+			StreamName:    "Write",
+			Handler:       _Blober_Write_Handler,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "Read",
+			Handler:       _Blober_Read_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "service.proto",
@@ -387,7 +552,7 @@ func (m *PutRes) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *StreamReq) Marshal() (dAtA []byte, err error) {
+func (m *GetReq) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -397,7 +562,55 @@ func (m *StreamReq) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *StreamReq) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetReq) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	return i, nil
+}
+
+func (m *GetRes) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetRes) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Blob) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Blob)))
+		i += copy(dAtA[i:], m.Blob)
+	}
+	return i, nil
+}
+
+func (m *WriteReq) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *WriteReq) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -412,7 +625,7 @@ func (m *StreamReq) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *StreamReq_Name) MarshalTo(dAtA []byte) (int, error) {
+func (m *WriteReq_Name) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	dAtA[i] = 0xa
 	i++
@@ -420,7 +633,7 @@ func (m *StreamReq_Name) MarshalTo(dAtA []byte) (int, error) {
 	i += copy(dAtA[i:], m.Name)
 	return i, nil
 }
-func (m *StreamReq_Blob) MarshalTo(dAtA []byte) (int, error) {
+func (m *WriteReq_Blob) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
 	if m.Blob != nil {
 		dAtA[i] = 0x12
@@ -430,7 +643,7 @@ func (m *StreamReq_Blob) MarshalTo(dAtA []byte) (int, error) {
 	}
 	return i, nil
 }
-func (m *StreamRes) Marshal() (dAtA []byte, err error) {
+func (m *WriteRes) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -440,11 +653,59 @@ func (m *StreamRes) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *StreamRes) MarshalTo(dAtA []byte) (int, error) {
+func (m *WriteRes) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
+	return i, nil
+}
+
+func (m *ReadReq) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ReadReq) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	return i, nil
+}
+
+func (m *ReadRes) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ReadRes) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Blob) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Blob)))
+		i += copy(dAtA[i:], m.Blob)
+	}
 	return i, nil
 }
 
@@ -495,7 +756,27 @@ func (m *PutRes) Size() (n int) {
 	return n
 }
 
-func (m *StreamReq) Size() (n int) {
+func (m *GetReq) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *GetRes) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Blob)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *WriteReq) Size() (n int) {
 	var l int
 	_ = l
 	if m.Phase != nil {
@@ -504,14 +785,14 @@ func (m *StreamReq) Size() (n int) {
 	return n
 }
 
-func (m *StreamReq_Name) Size() (n int) {
+func (m *WriteReq_Name) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Name)
 	n += 1 + l + sovService(uint64(l))
 	return n
 }
-func (m *StreamReq_Blob) Size() (n int) {
+func (m *WriteReq_Blob) Size() (n int) {
 	var l int
 	_ = l
 	if m.Blob != nil {
@@ -520,9 +801,29 @@ func (m *StreamReq_Blob) Size() (n int) {
 	}
 	return n
 }
-func (m *StreamRes) Size() (n int) {
+func (m *WriteRes) Size() (n int) {
 	var l int
 	_ = l
+	return n
+}
+
+func (m *ReadReq) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *ReadRes) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Blob)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
 	return n
 }
 
@@ -699,7 +1000,7 @@ func (m *PutRes) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *StreamReq) Unmarshal(dAtA []byte) error {
+func (m *GetReq) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -722,10 +1023,10 @@ func (m *StreamReq) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: StreamReq: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetReq: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StreamReq: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetReq: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -755,7 +1056,167 @@ func (m *StreamReq) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Phase = &StreamReq_Name{string(dAtA[iNdEx:postIndex])}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetRes) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetRes: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetRes: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Blob", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Blob = append(m.Blob[:0], dAtA[iNdEx:postIndex]...)
+			if m.Blob == nil {
+				m.Blob = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *WriteReq) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WriteReq: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WriteReq: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Phase = &WriteReq_Name{string(dAtA[iNdEx:postIndex])}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -785,7 +1246,7 @@ func (m *StreamReq) Unmarshal(dAtA []byte) error {
 			}
 			v := make([]byte, postIndex-iNdEx)
 			copy(v, dAtA[iNdEx:postIndex])
-			m.Phase = &StreamReq_Blob{v}
+			m.Phase = &WriteReq_Blob{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -808,7 +1269,7 @@ func (m *StreamReq) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *StreamRes) Unmarshal(dAtA []byte) error {
+func (m *WriteRes) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -831,12 +1292,172 @@ func (m *StreamRes) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: StreamRes: wiretype end group for non-group")
+			return fmt.Errorf("proto: WriteRes: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StreamRes: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: WriteRes: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ReadReq) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ReadReq: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ReadReq: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ReadRes) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ReadRes: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ReadRes: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Blob", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Blob = append(m.Blob[:0], dAtA[iNdEx:postIndex]...)
+			if m.Blob == nil {
+				m.Blob = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipService(dAtA[iNdEx:])
@@ -966,18 +1587,22 @@ var (
 func init() { proto.RegisterFile("service.proto", fileDescriptorService) }
 
 var fileDescriptorService = []byte{
-	// 200 bytes of a gzipped FileDescriptorProto
+	// 262 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2d, 0x4e, 0x2d, 0x2a,
 	0xcb, 0x4c, 0x4e, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0x95, 0x0c, 0xb8,
 	0xd8, 0x02, 0x4a, 0x4b, 0x82, 0x52, 0x0b, 0x85, 0x84, 0xb8, 0x58, 0xf2, 0x12, 0x73, 0x53, 0x25,
 	0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xc0, 0x6c, 0x90, 0x58, 0x52, 0x4e, 0x7e, 0x92, 0x04, 0x93,
-	0x02, 0xa3, 0x06, 0x4f, 0x10, 0x98, 0xad, 0xc4, 0x01, 0xd5, 0x51, 0xac, 0xe4, 0xc0, 0xc5, 0x19,
-	0x5c, 0x52, 0x94, 0x9a, 0x98, 0x0b, 0xd2, 0x2e, 0x82, 0xac, 0xdd, 0x83, 0x01, 0x6a, 0x80, 0x08,
-	0xb2, 0x01, 0x20, 0x51, 0x10, 0xcf, 0x89, 0x9d, 0x8b, 0xb5, 0x20, 0x23, 0xb1, 0x38, 0x55, 0x89,
-	0x1b, 0x61, 0x42, 0xb1, 0x51, 0x2a, 0x17, 0x9b, 0x53, 0x4e, 0x7e, 0x52, 0x6a, 0x91, 0x90, 0x3a,
-	0x17, 0x73, 0x40, 0x69, 0x89, 0x10, 0xbf, 0x1e, 0xcc, 0xd1, 0x10, 0x27, 0x4a, 0xa1, 0x09, 0x14,
-	0x0b, 0x19, 0x71, 0xb1, 0x41, 0xf4, 0x0b, 0x09, 0xc1, 0xa5, 0xe0, 0x4e, 0x92, 0xc2, 0x14, 0x2b,
-	0xd6, 0x60, 0x74, 0x12, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4,
-	0x18, 0x67, 0x3c, 0x96, 0x63, 0x48, 0x62, 0x03, 0x87, 0x89, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff,
-	0x9c, 0xdc, 0xb7, 0x0b, 0x24, 0x01, 0x00, 0x00,
+	0x02, 0xa3, 0x06, 0x4f, 0x10, 0x98, 0xad, 0xc4, 0x01, 0xd5, 0x51, 0xac, 0x24, 0xc3, 0xc5, 0xe6,
+	0x9e, 0x8a, 0x4b, 0x2f, 0x5c, 0xb6, 0x18, 0x6e, 0x0a, 0x23, 0x92, 0x29, 0xf6, 0x5c, 0x1c, 0xe1,
+	0x45, 0x99, 0x25, 0xa9, 0x20, 0xdd, 0x22, 0xc8, 0xba, 0x3d, 0x18, 0xa0, 0x76, 0x8b, 0x20, 0xdb,
+	0x0d, 0x12, 0x05, 0xf1, 0x9c, 0xd8, 0xb9, 0x58, 0x0b, 0x32, 0x12, 0x8b, 0x53, 0x95, 0xb8, 0xe0,
+	0x06, 0x14, 0x2b, 0xc9, 0x72, 0xb1, 0x07, 0xa5, 0x26, 0xa6, 0xe0, 0x72, 0x09, 0x5c, 0x1a, 0xab,
+	0x53, 0x8c, 0x76, 0x32, 0x72, 0xb1, 0x39, 0xe5, 0xe4, 0x27, 0xa5, 0x16, 0x09, 0xa9, 0x73, 0x31,
+	0x07, 0x94, 0x96, 0x08, 0xf1, 0xeb, 0xc1, 0x42, 0x0b, 0x12, 0x36, 0x52, 0x68, 0x02, 0xc5, 0x20,
+	0x85, 0xee, 0xa9, 0xc8, 0x0a, 0x21, 0x01, 0x21, 0x85, 0x26, 0x50, 0x2c, 0xa4, 0xcf, 0xc5, 0x0a,
+	0x76, 0xa6, 0x90, 0x20, 0x5c, 0x06, 0xe6, 0x6f, 0x29, 0x0c, 0xa1, 0x62, 0x0d, 0x46, 0x21, 0x1d,
+	0x2e, 0x16, 0x90, 0x63, 0x85, 0x04, 0xe0, 0x92, 0x50, 0xaf, 0x49, 0xa1, 0x8b, 0x14, 0x1b, 0x30,
+	0x3a, 0x09, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x33,
+	0x1e, 0xcb, 0x31, 0x24, 0xb1, 0x81, 0x23, 0xd8, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x32, 0xf6,
+	0xc8, 0xdf, 0xf1, 0x01, 0x00, 0x00,
 }

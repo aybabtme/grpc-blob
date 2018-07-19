@@ -19,8 +19,8 @@ func testBlober(t *testing.T, withClient func(func(blober.Blober))) {
 		filename string
 		payload  []byte
 	}{
-		{name: "Create", test: testBloberCreate, filename: "helloworld", payload: []byte("hellooooo world")},
 		{name: "Write", test: testBloberWrite, filename: "helloworld", payload: []byte("hellooooo world")},
+		{name: "Put", test: testBloberPut, filename: "helloworld", payload: []byte("hellooooo world")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -31,11 +31,11 @@ func testBlober(t *testing.T, withClient func(func(blober.Blober))) {
 	}
 }
 
-func testBloberCreate(t testing.TB, client blober.Blober, name string, payload []byte) {
+func testBloberWrite(t testing.TB, client blober.Blober, name string, payload []byte) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	wc, err := client.Create(ctx, name)
+	wc, err := client.Write(ctx, name)
 	require.NoError(t, err)
 
 	buf := bufio.NewWriter(wc)
@@ -50,11 +50,11 @@ func testBloberCreate(t testing.TB, client blober.Blober, name string, payload [
 	require.NoError(t, wc.Close())
 }
 
-func testBloberWrite(t testing.TB, client blober.Blober, name string, payload []byte) {
+func testBloberPut(t testing.TB, client blober.Blober, name string, payload []byte) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err := client.Write(ctx, name, payload)
+	err := client.Put(ctx, name, payload)
 	require.NoError(t, err)
 }
 

@@ -4,8 +4,9 @@ package service;
 
 service Blober {
     rpc Put(PutReq) returns (PutRes);
-    rpc Stream(stream StreamReq) returns (StreamRes);
-
+    rpc Get(GetReq) returns (GetRes);
+    rpc Write(stream WriteReq) returns (WriteRes);
+    rpc Read(ReadReq) returns (stream ReadRes);
 }
 
 message PutReq {
@@ -14,10 +15,24 @@ message PutReq {
 }
 message PutRes {}
 
-message StreamReq {
+message GetReq {
+    string name = 1;
+}
+message GetRes {
+    bytes blob = 1;
+}
+
+message WriteReq {
     oneof phase {
         string name = 1;
         bytes blob = 2;
     }
 }
-message StreamRes {}
+message WriteRes {}
+
+message ReadReq {
+    string name = 1;
+}
+message ReadRes {
+    bytes blob = 1;
+}

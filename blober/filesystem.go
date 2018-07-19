@@ -3,6 +3,7 @@ package blober
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +19,7 @@ func FileSystem(root string) Blober {
 	return &filesystem{root: root}
 }
 
-func (fs *filesystem) Write(ctx context.Context, name string, payload []byte) error {
+func (fs *filesystem) Put(ctx context.Context, name string, payload []byte) error {
 	path := filepath.Join(fs.root, name)
 	if strings.Contains(name, "..") {
 		return errors.New("name may not contain `..`")
@@ -36,7 +37,15 @@ func (fs *filesystem) Write(ctx context.Context, name string, payload []byte) er
 	return nil
 }
 
-func (fs *filesystem) Create(ctx context.Context, name string) (io.WriteCloser, error) {
+func (fs *filesystem) Get(ctx context.Context, name string) ([]byte, error) {
+	path := filepath.Join(fs.root, name)
+	if strings.Contains(name, "..") {
+		return nil, errors.New("name may not contain `..`")
+	}
+	return ioutil.ReadFile(path)
+}
+
+func (fs *filesystem) Write(ctx context.Context, name string) (io.WriteCloser, error) {
 	path := filepath.Join(fs.root, name)
 	if strings.Contains(name, "..") {
 		return nil, errors.New("name may not contain `..`")
@@ -44,6 +53,18 @@ func (fs *filesystem) Create(ctx context.Context, name string) (io.WriteCloser, 
 	fd, err := os.Create(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating file")
+	}
+	return fd, nil
+}
+
+func (fs *filesystem) Read(ctx context.Context, name string) (io.ReadCloser, error) {
+	path := filepath.Join(fs.root, name)
+	if strings.Contains(name, "..") {
+		return nil, errors.New("name may not contain `..`")
+	}
+	fd, err := os.Open(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "opening file")
 	}
 	return fd, nil
 }

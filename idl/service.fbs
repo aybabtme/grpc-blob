@@ -6,13 +6,29 @@ table PutReq {
 }
 table PutRes {}
 
-table StreamReq {
+table GetReq {
+    name:string;
+}
+table GetRes {
+    blob:[ubyte];
+}
+
+table WriteReq {
     name:string; // only set on first message
     blob:[ubyte]; // set everytime after
 }
-table StreamRes {}
+table WriteRes {}
+
+table ReadReq {
+    name:string;
+}
+table ReadRes {
+    blob:[ubyte];
+}
 
 rpc_service Blober {
     Put(PutReq):PutRes;
-    Stream(StreamReq):StreamRes (streaming: "client");
+    Get(GetReq):GetRes;
+    Write(WriteReq):WriteRes (streaming: "client");
+    Read(ReadReq):ReadRes (streaming: "server");
 }

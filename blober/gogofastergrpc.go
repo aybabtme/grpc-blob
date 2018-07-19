@@ -3,44 +3,69 @@ package blober
 import (
 	"context"
 	"io"
+	"os"
 
 	service "github.com/aybabtme/grpc-blob/gen/gogofastergrpc"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func GogoFasterGRPC(client service.BloberClient) Blober {
-	return &gogoFasterGRPCClient{client: client}
+	return &gogofasterGRPCClient{client: client}
 }
 
-type gogoFasterGRPCClient struct {
+type gogofasterGRPCClient struct {
 	client service.BloberClient
 }
 
-func (b *gogoFasterGRPCClient) Write(ctx context.Context, name string, payload []byte) error {
+func (b *gogofasterGRPCClient) Put(ctx context.Context, name string, blob []byte) error {
+	res, err := b.client.Put(ctx, &service.PutReq{Name: name, Blob: blob})
+	if err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			return os.ErrExist
+		}
+		return err
+	}
+	_ = res // not used for now
 	return nil
 }
 
-type gogoFasterGRPCClientWc struct {
-	req  *service.StreamReq
-	blob *service.StreamReq_Blob
-	srv  service.Blober_StreamClient
+func (b *gogofasterGRPCClient) Get(ctx context.Context, name string) (blob []byte, err error) {
+	res, err := b.client.Get(ctx, &service.GetReq{Name: name})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, os.ErrNotExist
+		}
+		return nil, err
+	}
+	return res.GetBlob(), nil
 }
 
-func (c *gogoFasterGRPCClient) Create(ctx context.Context, name string) (io.WriteCloser, error) {
-	srv, err := c.client.Stream(ctx)
+func (c *gogofasterGRPCClient) Write(ctx context.Context, name string) (io.WriteCloser, error) {
+	srv, err := c.client.Write(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening stream")
 	}
-	req := new(service.StreamReq)
-	req.Phase = &service.StreamReq_Name{Name: name}
+	req := new(service.WriteReq)
+	req.Phase = &service.WriteReq_Name{Name: name}
 
 	if err := srv.Send(req); err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			return nil, os.ErrExist
+		}
 		return nil, errors.Wrap(err, "sending file name")
 	}
-	return &gogoFasterGRPCClientWc{req: req, blob: new(service.StreamReq_Blob), srv: srv}, nil
+	return &gogofasterGRPCClientWc{req: req, blob: new(service.WriteReq_Blob), srv: srv}, nil
 }
 
-func (w *gogoFasterGRPCClientWc) Write(payload []byte) (int, error) {
+type gogofasterGRPCClientWc struct {
+	req  *service.WriteReq
+	blob *service.WriteReq_Blob
+	srv  service.Blober_WriteClient
+}
+
+func (w *gogofasterGRPCClientWc) Write(payload []byte) (int, error) {
 	blob := w.blob
 	blob.Blob = payload
 	req := w.req
@@ -52,11 +77,48 @@ func (w *gogoFasterGRPCClientWc) Write(payload []byte) (int, error) {
 	return len(payload), nil
 }
 
-func (w *gogoFasterGRPCClientWc) Close() error {
+func (w *gogofasterGRPCClientWc) Close() error {
 	res, err := w.srv.CloseAndRecv()
 	if err != nil {
 		return errors.Wrap(err, "closing")
 	}
 	_ = res // not used for now
+	return nil
+}
+
+func (c *gogofasterGRPCClient) Read(ctx context.Context, name string) (io.ReadCloser, error) {
+	srv, err := c.client.Read(ctx, &service.ReadReq{Name: name})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, os.ErrNotExist
+		}
+		return nil, errors.Wrap(err, "opening stream")
+	}
+	return &gogofasterGRPCClientRc{buf: nil, srv: srv}, nil
+}
+
+type gogofasterGRPCClientRc struct {
+	buf []byte
+	srv service.Blober_ReadClient
+}
+
+func (w *gogofasterGRPCClientRc) Read(payload []byte) (int, error) {
+	if len(w.buf) == 0 {
+		res, err := w.srv.Recv()
+		if err != nil {
+			return 0, errors.Wrap(err, "receiving bytes")
+		}
+		w.buf = res.GetBlob()
+	}
+	n := copy(payload, w.buf)
+	w.buf = w.buf[n:]
+	return n, nil
+}
+
+func (w *gogofasterGRPCClientRc) Close() error {
+	err := w.srv.CloseSend()
+	if err != nil {
+		return errors.Wrap(err, "closing")
+	}
 	return nil
 }
