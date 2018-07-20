@@ -32,6 +32,7 @@ message WriteRes {}
 
 message ReadReq {
     string name = 1;
+    uint32 buf_size = 2;
 }
 message ReadRes {
     bytes blob = 1;

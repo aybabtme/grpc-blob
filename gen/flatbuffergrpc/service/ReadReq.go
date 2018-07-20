@@ -34,11 +34,26 @@ func (rcv *ReadReq) Name() []byte {
 	return nil
 }
 
+func (rcv *ReadReq) BufSize() uint32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.GetUint32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *ReadReq) MutateBufSize(n uint32) bool {
+	return rcv._tab.MutateUint32Slot(6, n)
+}
+
 func ReadReqStart(builder *flatbuffers.Builder) {
-	builder.StartObject(1)
+	builder.StartObject(2)
 }
 func ReadReqAddName(builder *flatbuffers.Builder, name flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(name), 0)
+}
+func ReadReqAddBufSize(builder *flatbuffers.Builder, bufSize uint32) {
+	builder.PrependUint32Slot(1, bufSize, 0)
 }
 func ReadReqEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

@@ -72,17 +72,15 @@ func (c *flatbufferClient) Write(ctx context.Context, name string) (io.WriteClos
 		}
 		return nil, errors.Wrap(err, "sending file name")
 	}
-	return &flatbufferWc{b: b, srv: srv}, nil
+	return &flatbufferWc{srv: srv}, nil
 }
 
 type flatbufferWc struct {
-	b   *flatbuffers.Builder
 	srv service.Blober_WriteClient
 }
 
 func (w *flatbufferWc) Write(payload []byte) (int, error) {
-	b := w.b
-	b.Reset()
+	b := flatbuffers.NewBuilder(len(payload))
 	payloadT := b.CreateByteVector(payload)
 	service.WriteReqStart(b)
 	service.WriteReqAddBlob(b, payloadT)
@@ -103,11 +101,12 @@ func (w *flatbufferWc) Close() error {
 	return nil
 }
 
-func (c *flatbufferClient) Read(ctx context.Context, name string) (io.ReadCloser, error) {
+func (c *flatbufferClient) Read(ctx context.Context, name string, bufSize uint32) (io.ReadCloser, error) {
 	b := flatbuffers.NewBuilder(0)
 	nameT := b.CreateString(name)
 	service.ReadReqStart(b)
 	service.ReadReqAddName(b, nameT)
+	service.ReadReqAddBufSize(b, bufSize)
 	b.Finish(service.ReadReqEnd(b))
 	srv, err := c.client.Read(ctx, b)
 	if err != nil {

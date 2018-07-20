@@ -86,8 +86,8 @@ func (w *golangGRPCClientWc) Close() error {
 	return nil
 }
 
-func (c *golangGRPCClient) Read(ctx context.Context, name string) (io.ReadCloser, error) {
-	srv, err := c.client.Read(ctx, &service.ReadReq{Name: name})
+func (c *golangGRPCClient) Read(ctx context.Context, name string, bufSize uint32) (io.ReadCloser, error) {
+	srv, err := c.client.Read(ctx, &service.ReadReq{Name: name, BufSize: bufSize})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil, os.ErrNotExist

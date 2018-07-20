@@ -85,8 +85,10 @@ func (b *FlatbufferGRPCBlober) Write(srv service.Blober_WriteServer) error {
 
 func (b *FlatbufferGRPCBlober) Read(req *service.ReadReq, srv service.Blober_ReadServer) error {
 	ctx := srv.Context()
-
-	r, err := b.FS.Read(ctx, string(req.Name()))
+	if req.BufSize() < 1 {
+		return status.Errorf(codes.InvalidArgument, "must provide non-zero read buffer size")
+	}
+	r, err := b.FS.Read(ctx, string(req.Name()), req.BufSize())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return status.Errorf(codes.NotFound, "blob not found")
@@ -95,8 +97,7 @@ func (b *FlatbufferGRPCBlober) Read(req *service.ReadReq, srv service.Blober_Rea
 	}
 	defer r.Close()
 
-	fb := flatbuffers.NewBuilder(0)
-	buf := make([]byte, 1<<16) // 64 KiB
+	buf := make([]byte, req.BufSize())
 	for {
 		n, err := r.Read(buf)
 		if err != nil {
@@ -105,7 +106,7 @@ func (b *FlatbufferGRPCBlober) Read(req *service.ReadReq, srv service.Blober_Rea
 			}
 			return status.Errorf(codes.Internal, "can't read blob: %v", err)
 		}
-		fb.Reset()
+		fb := flatbuffers.NewBuilder(0)
 		blobT := fb.CreateByteVector(buf[:n])
 		service.ReadResStart(fb)
 		service.ReadResAddBlob(fb, blobT)

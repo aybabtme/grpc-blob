@@ -21,6 +21,7 @@ table WriteRes {}
 
 table ReadReq {
     name:string;
+    buf_size:uint;
 }
 table ReadRes {
     blob:[ubyte];

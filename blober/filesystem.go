@@ -62,7 +62,7 @@ func (fs *filesystem) Write(ctx context.Context, name string) (io.WriteCloser, e
 	return fd, nil
 }
 
-func (fs *filesystem) Read(ctx context.Context, name string) (io.ReadCloser, error) {
+func (fs *filesystem) Read(ctx context.Context, name string, bufSize uint32) (io.ReadCloser, error) {
 	path := filepath.Join(fs.root, name)
 	if strings.Contains(name, "..") {
 		return nil, errors.New("name may not contain `..`")

@@ -2,7 +2,9 @@ package blober_test
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -14,28 +16,44 @@ import (
 	"google.golang.org/grpc"
 )
 
+func randbytes(size uint32) []byte {
+	out := make([]byte, size)
+	for i := range out {
+		out[i] = byte(i % 256)
+	}
+	return out
+}
+
 func testBlober(t *testing.T, withClient func(func(blober.Blober))) {
-	tests := []struct {
+	type test struct {
 		name     string
-		test     func(t testing.TB, client blober.Blober, name string, blob []byte)
+		test     func(t testing.TB, client blober.Blober, name string, blob []byte, bufSize uint32)
 		filename string
 		blob     []byte
-	}{
-		{name: "Write", test: testBloberWrite, filename: "helloworld", blob: []byte("hellooooo world")},
-		{name: "Read", test: testBloberRead, filename: "helloworld", blob: []byte("hellooooo world")},
-		{name: "Put", test: testBloberPut, filename: "helloworld", blob: []byte("hellooooo world")},
-		{name: "Get", test: testBloberGet, filename: "helloworld", blob: []byte("hellooooo world")},
+		bufSize  uint32
+	}
+	tests := []test{
+		{name: "Write", test: testBloberWrite, filename: "helloworld", blob: []byte("hellooooo world"), bufSize: 1 << 16},
+		{name: "Read", test: testBloberRead, filename: "helloworld", blob: []byte("hellooooo world"), bufSize: 1 << 16},
+		{name: "Put", test: testBloberPut, filename: "helloworld", blob: []byte("hellooooo world"), bufSize: 1 << 16},
+		{name: "Get", test: testBloberGet, filename: "helloworld", blob: []byte("hellooooo world"), bufSize: 1 << 16},
+	}
+	for byteSize := uint32(1); byteSize <= 1<<17; byteSize *= 2 {
+		for bufSize := uint32(1); bufSize <= 1<<17; bufSize *= 2 {
+			tests = append(tests, test{name: fmt.Sprintf("Read_large_%d_%d", byteSize, bufSize), test: testBloberRead, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
+			tests = append(tests, test{name: fmt.Sprintf("Write_large_%d_%d", byteSize, bufSize), test: testBloberWrite, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			withClient(func(client blober.Blober) {
-				tt.test(t, client, tt.filename, tt.blob)
+				tt.test(t, client, tt.filename, tt.blob, tt.bufSize)
 			})
 		})
 	}
 }
 
-func testBloberWrite(t testing.TB, client blober.Blober, name string, blob []byte) {
+func testBloberWrite(t testing.TB, client blober.Blober, name string, blob []byte, bufSize uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -58,14 +76,14 @@ func testBloberWrite(t testing.TB, client blober.Blober, name string, blob []byt
 	require.Equal(t, blob, got)
 }
 
-func testBloberRead(t testing.TB, client blober.Blober, name string, blob []byte) {
+func testBloberRead(t testing.TB, client blober.Blober, name string, blob []byte, bufSize uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	err := client.Put(ctx, name, blob)
 	require.NoError(t, err)
 
-	rd, err := client.Read(ctx, name)
+	rd, err := client.Read(ctx, name, bufSize)
 	require.NoError(t, err)
 	defer func() {
 		err = rd.Close()
@@ -74,10 +92,14 @@ func testBloberRead(t testing.TB, client blober.Blober, name string, blob []byte
 
 	got, err := ioutil.ReadAll(rd)
 	require.NoError(t, err)
+	if !bytes.Equal(blob, got) {
+		ioutil.WriteFile("got.raw", got, 0644)
+		ioutil.WriteFile("want.raw", blob, 0644)
+	}
 	require.Equal(t, blob, got)
 }
 
-func testBloberPut(t testing.TB, client blober.Blober, name string, blob []byte) {
+func testBloberPut(t testing.TB, client blober.Blober, name string, blob []byte, bufSize uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -88,7 +110,7 @@ func testBloberPut(t testing.TB, client blober.Blober, name string, blob []byte)
 	require.NoError(t, err)
 }
 
-func testBloberGet(t testing.TB, client blober.Blober, name string, want []byte) {
+func testBloberGet(t testing.TB, client blober.Blober, name string, want []byte, bufSize uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

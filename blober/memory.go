@@ -58,7 +58,7 @@ func (w *memoryWc) Close() error {
 	return nil
 }
 
-func (mem *memory) Read(ctx context.Context, name string) (io.ReadCloser, error) {
+func (mem *memory) Read(ctx context.Context, name string, bufSize uint32) (io.ReadCloser, error) {
 	blob, ok := mem.blobs.Load(name)
 	if !ok {
 		return nil, os.ErrNotExist

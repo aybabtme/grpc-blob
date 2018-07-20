@@ -71,8 +71,10 @@ func (b *GogoFasterGRPCBlober) Write(srv service.Blober_WriteServer) error {
 
 func (b *GogoFasterGRPCBlober) Read(req *service.ReadReq, srv service.Blober_ReadServer) error {
 	ctx := srv.Context()
-
-	fd, err := b.FS.Read(ctx, req.GetName())
+	if req.GetBufSize() < 1 {
+		return status.Errorf(codes.InvalidArgument, "must provide non-zero read buffer size")
+	}
+	fd, err := b.FS.Read(ctx, req.GetName(), req.GetBufSize())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return status.Errorf(codes.NotFound, "blob not found")
@@ -82,7 +84,7 @@ func (b *GogoFasterGRPCBlober) Read(req *service.ReadReq, srv service.Blober_Rea
 	defer fd.Close() // in any case
 
 	res := &service.ReadRes{}
-	buf := make([]byte, 1<<16) // 64 KiB
+	buf := make([]byte, req.GetBufSize())
 	for {
 		n, err := fd.Read(buf)
 		if err != nil {
