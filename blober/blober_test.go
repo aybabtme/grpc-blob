@@ -143,7 +143,7 @@ func benchBlober(b *testing.B, withClient func(func(blober.Blober))) {
 			bench{name: fmt.Sprintf("Write_%d", byteSize), bench: benchBloberWrite, filename: "helloworld", blob: randbytes(byteSize)},
 		)
 		for bufSize := uint32(1 << 17); bufSize <= 1<<17; bufSize *= 2 {
-			benchs = append(benchs, bench{name: fmt.Sprintf("Read_large_%d_%d", byteSize, bufSize), bench: benchBloberRead, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
+			benchs = append(benchs, bench{name: fmt.Sprintf("Read_%d_%d", byteSize, bufSize), bench: benchBloberRead, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
 		}
 	}
 	for _, tt := range benchs {
