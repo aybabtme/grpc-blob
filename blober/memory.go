@@ -18,10 +18,7 @@ func Memory() Blober {
 }
 
 func (mem *memory) Put(ctx context.Context, name string, blob []byte) error {
-	_, ok := mem.blobs.LoadOrStore(name, blob)
-	if ok {
-		return os.ErrExist
-	}
+	mem.blobs.Store(name, blob)
 	return nil
 }
 

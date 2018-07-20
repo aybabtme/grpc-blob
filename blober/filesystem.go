@@ -42,7 +42,12 @@ func (fs *filesystem) Get(ctx context.Context, name string) ([]byte, error) {
 	if strings.Contains(name, "..") {
 		return nil, errors.New("name may not contain `..`")
 	}
-	return ioutil.ReadFile(path)
+	fd, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+	return ioutil.ReadAll(fd)
 }
 
 func (fs *filesystem) Write(ctx context.Context, name string) (io.WriteCloser, error) {

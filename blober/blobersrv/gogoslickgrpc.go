@@ -20,7 +20,7 @@ type GogoSlickGRPCBlober struct {
 func (b *GogoSlickGRPCBlober) Put(ctx context.Context, req *service.PutReq) (*service.PutRes, error) {
 	err := b.FS.Put(ctx, req.GetName(), req.GetBlob())
 	if err != nil {
-		if err == os.ErrExist {
+		if os.IsExist(err) {
 			return nil, status.Errorf(codes.AlreadyExists, "blob already exists")
 		}
 		return nil, status.Errorf(codes.Internal, "can't create blob: %v", err)
@@ -31,7 +31,7 @@ func (b *GogoSlickGRPCBlober) Put(ctx context.Context, req *service.PutReq) (*se
 func (b *GogoSlickGRPCBlober) Get(ctx context.Context, req *service.GetReq) (*service.GetRes, error) {
 	blob, err := b.FS.Get(ctx, req.GetName())
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			return nil, status.Error(codes.NotFound, "blob not found")
 		}
 		return nil, status.Errorf(codes.Internal, "can't get blob: %v", err)
@@ -49,7 +49,7 @@ func (b *GogoSlickGRPCBlober) Write(srv service.Blober_WriteServer) error {
 
 	fd, err := b.FS.Write(ctx, req.GetName())
 	if err != nil {
-		if err == os.ErrExist {
+		if os.IsExist(err) {
 			return status.Error(codes.AlreadyExists, "blob already exists")
 		}
 		return status.Errorf(codes.Internal, "can't create blob: %v", err)
@@ -74,7 +74,7 @@ func (b *GogoSlickGRPCBlober) Read(req *service.ReadReq, srv service.Blober_Read
 
 	fd, err := b.FS.Read(ctx, req.GetName())
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			return status.Errorf(codes.NotFound, "blob not found")
 		}
 		return status.Errorf(codes.Internal, "can't create blob: %v", err)
