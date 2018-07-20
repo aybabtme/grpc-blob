@@ -3,6 +3,7 @@ package blober_test
 import (
 	"bufio"
 	"context"
+	"io/ioutil"
 	"net"
 	"os"
 	"testing"
@@ -21,6 +22,7 @@ func testBlober(t *testing.T, withClient func(func(blober.Blober))) {
 		blob     []byte
 	}{
 		{name: "Write", test: testBloberWrite, filename: "helloworld", blob: []byte("hellooooo world")},
+		{name: "Read", test: testBloberRead, filename: "helloworld", blob: []byte("hellooooo world")},
 		{name: "Put", test: testBloberPut, filename: "helloworld", blob: []byte("hellooooo world")},
 		{name: "Get", test: testBloberGet, filename: "helloworld", blob: []byte("hellooooo world")},
 	}
@@ -50,6 +52,29 @@ func testBloberWrite(t testing.TB, client blober.Blober, name string, blob []byt
 	require.NoError(t, err)
 
 	require.NoError(t, wc.Close())
+
+	got, err := client.Get(ctx, name)
+	require.NoError(t, err)
+	require.Equal(t, blob, got)
+}
+
+func testBloberRead(t testing.TB, client blober.Blober, name string, blob []byte) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := client.Put(ctx, name, blob)
+	require.NoError(t, err)
+
+	rd, err := client.Read(ctx, name)
+	require.NoError(t, err)
+	defer func() {
+		err = rd.Close()
+		require.NoError(t, err)
+	}()
+
+	got, err := ioutil.ReadAll(rd)
+	require.NoError(t, err)
+	require.Equal(t, blob, got)
 }
 
 func testBloberPut(t testing.TB, client blober.Blober, name string, blob []byte) {

@@ -106,6 +106,9 @@ func (w *gogofasterGRPCClientRc) Read(payload []byte) (int, error) {
 	if len(w.buf) == 0 {
 		res, err := w.srv.Recv()
 		if err != nil {
+			if err == io.EOF {
+				return 0, err
+			}
 			return 0, errors.Wrap(err, "receiving bytes")
 		}
 		w.buf = res.GetBlob()
