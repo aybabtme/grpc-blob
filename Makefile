@@ -1,17 +1,23 @@
 root_dir = $(shell git rev-parse --show-toplevel)
+pkg_dir = $(root_dir:$(GOPATH)/src/%=%)
 gen_dir = gen
 proto_idl = idl/service.proto
 flat_idl = idl/service.fbs
 
-all: $(gen_dir)/golanggrpc/service.pb.go \
-	 $(gen_dir)/gofastgrpc/service.pb.go \
-	 $(gen_dir)/gogofastgrpc/service.pb.go \
-	 $(gen_dir)/gogofastergrpc/service.pb.go \
-	 $(gen_dir)/gogoslickgrpc/service.pb.go \
-	 $(gen_dir)/flatbuffergrpc/Blober_grpc.go
+all: codegen
+
+codegen: $(gen_dir)/golanggrpc/service.pb.go \
+	     $(gen_dir)/gofastgrpc/service.pb.go \
+	     $(gen_dir)/gogofastgrpc/service.pb.go \
+	     $(gen_dir)/gogofastergrpc/service.pb.go \
+	     $(gen_dir)/gogoslickgrpc/service.pb.go \
+	     $(gen_dir)/flatbuffergrpc/service/Blober_grpc.go
 
 clean:
 	rm -rf gen
+
+test: codegen
+	go test $(pkg_dir)/...
 
 $(gen_dir)/golanggrpc:
 	mkdir -p $(gen_dir)/golanggrpc
@@ -46,5 +52,5 @@ $(gen_dir)/gogoslickgrpc/service.pb.go: $(gen_dir)/gogoslickgrpc $(proto_idl)
 $(gen_dir)/flatbuffergrpc:
 	mkdir -p $(gen_dir)/flatbuffergrpc
 
-$(gen_dir)/flatbuffergrpc/Blober_grpc.go: $(gen_dir)/flatbuffergrpc $(flat_idl)
+$(gen_dir)/flatbuffergrpc/service/Blober_grpc.go: $(gen_dir)/flatbuffergrpc $(flat_idl)
 	docker run -v $(root_dir):$(root_dir) -w $(root_dir) neomantra/flatbuffers flatc --grpc --go -o $(gen_dir)/flatbuffergrpc/ idl/service.fbs
