@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -38,8 +39,8 @@ func testBlober(t *testing.T, withClient func(func(blober.Blober))) {
 		{name: "Put", test: testBloberPut, filename: "helloworld", blob: []byte("hellooooo world"), bufSize: 1 << 16},
 		{name: "Get", test: testBloberGet, filename: "helloworld", blob: []byte("hellooooo world"), bufSize: 1 << 16},
 	}
-	for byteSize := uint32(1); byteSize <= 1<<17; byteSize *= 2 {
-		for bufSize := uint32(1); bufSize <= 1<<17; bufSize *= 2 {
+	for byteSize := uint32(64); byteSize <= 1<<17; byteSize *= 2 {
+		for bufSize := uint32(64); bufSize <= 1<<17; bufSize *= 2 {
 			tests = append(tests, test{name: fmt.Sprintf("Read_large_%d_%d", byteSize, bufSize), test: testBloberRead, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
 			tests = append(tests, test{name: fmt.Sprintf("Write_large_%d_%d", byteSize, bufSize), test: testBloberWrite, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
 		}
@@ -126,9 +127,100 @@ func testBloberGet(t testing.TB, client blober.Blober, name string, want []byte,
 	require.Equal(t, want, got)
 }
 
+func benchBlober(b *testing.B, withClient func(func(blober.Blober))) {
+	type bench struct {
+		name     string
+		bench    func(b *testing.B, client blober.Blober, name string, blob []byte, bufSize uint32)
+		filename string
+		blob     []byte
+		bufSize  uint32
+	}
+	var benchs []bench
+	for byteSize := uint32(1 << 17); byteSize <= 1<<20; byteSize *= 2 {
+		benchs = append(benchs,
+			bench{name: fmt.Sprintf("Put_%d", byteSize), bench: benchBloberPut, filename: "helloworld", blob: randbytes(byteSize)},
+			bench{name: fmt.Sprintf("Get_%d", byteSize), bench: benchBloberGet, filename: "helloworld", blob: randbytes(byteSize)},
+			bench{name: fmt.Sprintf("Write_%d", byteSize), bench: benchBloberWrite, filename: "helloworld", blob: randbytes(byteSize)},
+		)
+		for bufSize := uint32(1 << 17); bufSize <= 1<<17; bufSize *= 2 {
+			benchs = append(benchs, bench{name: fmt.Sprintf("Read_large_%d_%d", byteSize, bufSize), bench: benchBloberRead, filename: "helloworld", blob: randbytes(byteSize), bufSize: bufSize})
+		}
+	}
+	for _, tt := range benchs {
+		b.Run(tt.name, func(b *testing.B) {
+			withClient(func(client blober.Blober) {
+				tt.bench(b, client, tt.filename, tt.blob, tt.bufSize)
+			})
+		})
+	}
+}
+
+func benchBloberPut(b *testing.B, client blober.Blober, name string, blob []byte, bufSize uint32) {
+	b.SetBytes(int64(len(blob)))
+	b.ReportAllocs()
+	b.ResetTimer()
+	err := client.Put(context.Background(), name, blob)
+	if err != nil {
+		b.Fatal(err)
+	}
+}
+func benchBloberGet(b *testing.B, client blober.Blober, name string, blob []byte, bufSize uint32) {
+	if err := client.Put(context.Background(), name, blob); err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(blob)))
+	b.ReportAllocs()
+	b.ResetTimer()
+	got, err := client.Get(context.Background(), name)
+	if err != nil {
+		b.Fatal(err)
+	}
+	if len(blob) != len(got) {
+		b.Fatalf("want=%d got=%d", len(blob), len(got))
+	}
+}
+func benchBloberWrite(b *testing.B, client blober.Blober, name string, blob []byte, bufSize uint32) {
+	fd, err := client.Write(context.Background(), name)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(blob)))
+	b.ReportAllocs()
+	b.ResetTimer()
+	buf := bufio.NewWriter(fd)
+	_, err = buf.Write(blob)
+	if err != nil {
+		b.Fatal(err)
+	}
+	err = buf.Flush()
+	if err != nil {
+		b.Fatal(err)
+	}
+	err = fd.Close()
+	if err != nil {
+		b.Fatal(err)
+	}
+}
+func benchBloberRead(b *testing.B, client blober.Blober, name string, blob []byte, bufSize uint32) {
+	if err := client.Put(context.Background(), name, blob); err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(blob)))
+	b.ReportAllocs()
+	b.ResetTimer()
+	rd, err := client.Read(context.Background(), name, bufSize)
+	if err != nil {
+		b.Fatal(err)
+	}
+	_, err = io.Copy(ioutil.Discard, rd)
+	if err != nil {
+		b.Fatal(err)
+	}
+}
+
 // helper
 
-func withGRPC(t *testing.T, srvOpts []grpc.ServerOption, dialOpts []grpc.DialOption, configure func(s *grpc.Server)) (cc *grpc.ClientConn, done func()) {
+func withGRPC(t testing.TB, srvOpts []grpc.ServerOption, dialOpts []grpc.DialOption, configure func(s *grpc.Server)) (cc *grpc.ClientConn, done func()) {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 

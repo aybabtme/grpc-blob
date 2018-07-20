@@ -19,3 +19,14 @@ func TestFileSystem(t *testing.T) {
 		fn(client)
 	})
 }
+
+func BenchmarkFileSystem(b *testing.B) {
+	benchBlober(b, func(fn func(blober.Blober)) {
+		name, err := ioutil.TempDir(os.TempDir(), "test")
+		require.NoError(b, err)
+		defer os.RemoveAll(name)
+
+		client := blober.FileSystem(name)
+		fn(client)
+	})
+}

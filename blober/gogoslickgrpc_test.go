@@ -20,3 +20,15 @@ func TestGogoSlickGRPC(t *testing.T) {
 		fn(client)
 	})
 }
+
+func BenchmarkGogoSlickGRPC(b *testing.B) {
+	benchBlober(b, func(fn func(blober.Blober)) {
+		svc := &blobersrv.GogoSlickGRPCBlober{FS: blober.Memory()}
+		cc, done := withGRPC(b, nil, nil, func(s *grpc.Server) { service.RegisterBloberServer(s, svc) })
+		defer done()
+
+		client := blober.GogoSlickGRPC(service.NewBloberClient(cc))
+
+		fn(client)
+	})
+}

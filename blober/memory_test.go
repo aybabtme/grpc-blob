@@ -12,3 +12,10 @@ func TestMemory(t *testing.T) {
 		fn(client)
 	})
 }
+
+func BenchmarkMemory(b *testing.B) {
+	benchBlober(b, func(fn func(blober.Blober)) {
+		client := blober.Memory()
+		fn(client)
+	})
+}

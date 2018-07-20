@@ -26,3 +26,19 @@ func TestFlatbufferGRPC(t *testing.T) {
 		fn(client)
 	})
 }
+
+func BenchmarkFlatbufferGRPC(b *testing.B) {
+	benchBlober(b, func(fn func(blober.Blober)) {
+		svc := &blobersrv.FlatbufferGRPCBlober{FS: blober.Memory()}
+		cc, done := withGRPC(b,
+			[]grpc.ServerOption{grpc.CustomCodec(flatbuffers.FlatbuffersCodec{})},
+			[]grpc.DialOption{grpc.WithDefaultCallOptions(grpc.CallCustomCodec(flatbuffers.FlatbuffersCodec{}))},
+			func(s *grpc.Server) { service.RegisterBloberServer(s, svc) },
+		)
+		defer done()
+
+		client := blober.Flatbuffer(service.NewBloberClient(cc))
+
+		fn(client)
+	})
+}

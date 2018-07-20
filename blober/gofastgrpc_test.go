@@ -20,3 +20,15 @@ func TestGoFastGRPC(t *testing.T) {
 		fn(client)
 	})
 }
+
+func BenchmarkGoFastGRPC(b *testing.B) {
+	benchBlober(b, func(fn func(blober.Blober)) {
+		svc := &blobersrv.GoFastGRPCBlober{FS: blober.Memory()}
+		cc, done := withGRPC(b, nil, nil, func(s *grpc.Server) { service.RegisterBloberServer(s, svc) })
+		defer done()
+
+		client := blober.GoFastGRPC(service.NewBloberClient(cc))
+
+		fn(client)
+	})
+}
