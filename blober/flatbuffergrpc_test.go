@@ -16,7 +16,7 @@ func TestFlatbufferGRPC(t *testing.T) {
 		svc := &blobersrv.FlatbufferGRPCBlober{FS: blober.Memory()}
 		cc, done := withGRPC(t,
 			[]grpc.ServerOption{grpc.CustomCodec(flatbuffers.FlatbuffersCodec{})},
-			[]grpc.DialOption{grpc.WithCodec(flatbuffers.FlatbuffersCodec{})},
+			[]grpc.DialOption{grpc.WithDefaultCallOptions(grpc.CallCustomCodec(flatbuffers.FlatbuffersCodec{}))},
 			func(s *grpc.Server) { service.RegisterBloberServer(s, svc) },
 		)
 		defer done()
